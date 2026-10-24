@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مركز الألعاب والحاسبات - نظام الإدارة الشامل</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Tajawal) -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Tajawal', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
+
+    <!-- ==================== LOGIN OVERLAY ==================== -->
+    <div id="login-overlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 space-y-6 border border-slate-100">
+            <div class="text-center space-y-2">
+                <div class="w-16 h-16 bg-brand-600 text-white rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-lg shadow-brand-500/30">
+                    <i class="fa-solid fa-gamepad"></i>
+                </div>
+                <h2 class="text-2xl font-extrabold text-slate-800">تسجيل الدخول للنظام</h2>
+                <p class="text-xs text-slate-500">أدخل اسم المستخدم والرقم السري للوصول للبيانات</p>
+                <p id="login-hint" class="text-xs text-brand-700 font-semibold bg-brand-50 p-2.5 rounded-xl border border-brand-100"></p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">اسم المستخدم</label>
+                    <input type="text" id="login-user" required placeholder="أدخل اسم المستخدم" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">الرقم السري (كلمة المرور)</label>
+                    <input type="password" id="login-pass" required placeholder="أدخل الرقم السري" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <p id="login-error" class="text-xs text-rose-500 text-center font-bold hidden">اسم المستخدم أو الرقم السري غير صحيح!</p>
+                <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-brand-600/20 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>دخول للنظام</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Header & Navigation -->
+    <header class="bg-slate-900 text-white shadow-xl sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="bg-brand-500 p-2.5 rounded-xl text-white shadow-md">
+                        <i class="fa-solid fa-shop text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-black text-lg leading-tight">مركز إدارة المحل</h1>
+                        <span class="text-xs text-slate-400">المبيعات • الأرباح • الإرجاع • المخزون</span>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs & Logout -->
+                <div class="flex items-center gap-3">
+                    <nav class="flex space-x-1 space-x-reverse bg-slate-800 p-1 rounded-xl text-sm font-medium">
+                        <button onclick="switchTab('sales')" id="tab-btn-sales" class="tab-btn flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-white bg-brand-600 shadow">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <span>المبيعات والأرباح</span>
+                        </button>
+                        <button onclick="switchTab('inventory')" id="tab-btn-inventory" class="tab-btn flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-slate-300 hover:text-white hover:bg-slate-700">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                            <span>المخزون الأقسام</span>
+                        </button>
+                        <button onclick="switchTab('debts')" id="tab-btn-debts" class="tab-btn flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-slate-300 hover:text-white hover:bg-slate-700">
+                            <i class="fa-solid fa-book-bookmark"></i>
+                            <span>الديون</span>
+                        </button>
+                    </nav>
+                    <button onclick="logout()" title="قفل النظام" class="bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white p-2.5 rounded-xl transition text-sm">
+                        <i class="fa-solid fa-power-off"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ==================== SECTION 1: SALES & PROFITS ==================== -->
+        <section id="section-sales" class="space-y-6">
+            <!-- Dynamic Stats Cards (Connected to Date Filters) -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 mb-1">إجمالي المبيعات (المجموع)</p>
+                        <h3 id="stat-sales-total" class="text-2xl font-black text-slate-800">0 د.ع</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-money-bill-wave"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 mb-1">صافي الربح المتحقق</p>
+                        <h3 id="stat-sales-profit" class="text-2xl font-black text-emerald-600">0 د.ع</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-700 rounded-xl flex items-center justify-center text-xl border border-emerald-200">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 mb-1">عدد القطع المباعة</p>
+                        <h3 id="stat-sales-qty" class="text-2xl font-black text-slate-800">0</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-bag-shopping"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 mb-1">عدد عمليات البيع</p>
+                        <h3 id="stat-sales-count" class="text-2xl font-black text-slate-800">0</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Add Sale Form -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit space-y-4">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-cart-plus text-brand-500"></i>
+                        <span>تسجيل عملية بيع جديدة</span>
+                    </h2>
+
+                    <form id="sale-form" onsubmit="handleAddSale(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">1️⃣ اختر القسم أولاً *</label>
+                            <select id="sale-category-select" onchange="onCategorySelectChange()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-semibold">
+                                <option value="">-- اختر القسم --</option>
+                                <option value="إكسسوارات">إكسسوارات</option>
+                                <option value="أجهزة">أجهزة</option>
+                                <option value="ألعاب بلي">ألعاب بلي</option>
+                                <option value="أخرى">أخرى</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">2️⃣ اختر السلعة من المخزون *</label>
+                            <select id="sale-item-select" onchange="autoFillSaleFromInventory()" disabled class="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-semibold">
+                                <option value="">-- الرجاء اختيار القسم أولاً --</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">اسم المادة / السلعة</label>
+                            <input type="text" id="sale-name" required placeholder="اسم السلعة" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">سعر البيع (للقطعة)</label>
+                                <input type="number" id="sale-price" required min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">الكمية المباعة</label>
+                                <input type="number" id="sale-qty" required min="1" value="1" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+                        </div>
+
+                        <input type="hidden" id="sale-cost" value="0">
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">التاريخ والوقت</label>
+                            <input type="datetime-local" id="sale-date" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl transition shadow flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-check"></i>
+                            <span>تأكيد وتسجيل البيع</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Sales Table & Period Filter -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <h2 class="text-lg font-bold text-slate-800">سجل المبيعات والأرباح</h2>
+                        <div class="flex items-center gap-2">
+                            <button onclick="filterTodaySales()" class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold px-3 py-2 rounded-xl transition border border-brand-200">
+                                <i class="fa-solid fa-calendar-day ml-1"></i> مبيعات اليوم
+                            </button>
+                            <button onclick="resetSalesFilter()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl transition">عرض الكل</button>
+                            <button onclick="exportSalesCSV()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold px-3 py-2 rounded-xl transition border border-emerald-200 flex items-center gap-1">
+                                <i class="fa-solid fa-file-excel"></i> تصدير
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Date & Search Filters -->
+                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 mb-1">بحث باسم السلعة/القسم</label>
+                            <input type="text" id="sales-search-text" oninput="renderSales()" placeholder="بحث..." class="w-full bg-white border border-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 mb-1">من تاريخ</label>
+                            <input type="date" id="sales-filter-date-from" onchange="renderSales()" class="w-full bg-white border border-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 mb-1">إلى تاريخ</label>
+                            <input type="date" id="sales-filter-date-to" onchange="renderSales()" class="w-full bg-white border border-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Sales Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-right">
+                            <thead class="bg-slate-100 text-slate-600 text-xs font-bold uppercase">
+                                <tr>
+                                    <th class="p-3">السلعة والقسم</th>
+                                    <th class="p-3">سعر البيع</th>
+                                    <th class="p-3">الكمية</th>
+                                    <th class="p-3">المجموع</th>
+                                    <th class="p-3">الربح</th>
+                                    <th class="p-3">التاريخ والوقت</th>
+                                    <th class="p-3 text-center">إرجاع / حذف</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sales-table-body" class="divide-y divide-slate-100">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SECTION 2: INVENTORY BY CATEGORIES ==================== -->
+        <section id="section-inventory" class="space-y-6 hidden">
+            <!-- Inventory Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 mb-1">إجمالي قيمة شراء المخزون</p>
+                        <h3 id="stat-inv-value" class="text-2xl font-black text-slate-800">0 د.ع</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-boxes-packing"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 mb-1">عدد الأغراض والسلع</p>
+                        <h3 id="stat-inv-count" class="text-2xl font-black text-slate-800">0</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-slate-100 text-slate-700 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 mb-1">أغراض نافذة / منخفضة</p>
+                        <h3 id="stat-inv-low" class="text-2xl font-black text-amber-600">0</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Add Inventory Item Form -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
+                    <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-box-archive text-brand-500"></i>
+                        <span>إضافة سلعة جديدة للمخزون</span>
+                    </h2>
+                    <form id="inventory-form" onsubmit="handleAddInventory(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">القسم *</label>
+                            <select id="inv-category" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-semibold">
+                                <option value="إكسسوارات">إكسسوارات</option>
+                                <option value="أجهزة">أجهزة</option>
+                                <option value="ألعاب بلي">ألعاب بلي</option>
+                                <option value="أخرى">أخرى</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">اسم السلعة / البضاعة *</label>
+                            <input type="text" id="inv-name" required placeholder="مثال: يَدة بلي 5 أصلي" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">سعر الشراء (التكلفة) *</label>
+                                <input type="number" id="inv-cost-price" required min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">سعر البيع للزبون *</label>
+                                <input type="number" id="inv-sell-price" required min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">الكمية المتوفرة *</label>
+                                <input type="number" id="inv-stock" required min="0" placeholder="10" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">تنبيه انخفاض الكمية</label>
+                                <input type="number" id="inv-min" value="3" min="0" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition shadow flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>حفظ في المخزون</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Inventory List with Category Filters -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <h2 class="text-lg font-bold text-slate-800">قائمة مواد المخزون</h2>
+                        <div class="flex items-center gap-2">
+                            <select id="inv-filter-category" onchange="renderInventory()" class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 font-bold focus:outline-none">
+                                <option value="">كل الأقسام</option>
+                                <option value="إكسسوارات">إكسسوارات</option>
+                                <option value="أجهزة">أجهزة</option>
+                                <option value="ألعاب بلي">ألعاب بلي</option>
+                                <option value="أخرى">أخرى</option>
+                            </select>
+                            <input type="text" id="inv-search-text" oninput="renderInventory()" placeholder="بحث..." class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none w-36">
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-right">
+                            <thead class="bg-slate-100 text-slate-600 text-xs font-bold uppercase">
+                                <tr>
+                                    <th class="p-3">السلعة والقسم</th>
+                                    <th class="p-3">الشراء</th>
+                                    <th class="p-3">البيع</th>
+                                    <th class="p-3">المتبقي</th>
+                                    <th class="p-3">الحالة</th>
+                                    <th class="p-3 text-center">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-table-body" class="divide-y divide-slate-100">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SECTION 3: DEBTS ==================== -->
+        <section id="section-debts" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 mb-1">إجمالي الديون المطلوبة للزبائن</p>
+                        <h3 id="stat-debts-total" class="text-2xl font-black text-rose-600">0 د.ع</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-hand-holding-dollar"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 mb-1">عدد الزبائن المطلوبة ديونهم</p>
+                        <h3 id="stat-debts-count" class="text-2xl font-black text-slate-800">0</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Add Debt Form -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
+                    <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-rose-500"></i>
+                        <span>تسجيل دين زبون جديد</span>
+                    </h2>
+                    <form id="debt-form" onsubmit="handleAddDebt(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">اسم الزبون *</label>
+                            <input type="text" id="debt-name" required placeholder="مثال: علي العبيدي" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">المبلغ المطلوب (الدين) *</label>
+                            <input type="number" id="debt-amount" required min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">رقم الهاتف (اختياري)</label>
+                            <input type="tel" id="debt-phone" placeholder="07700000000" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+                        <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-xl transition shadow flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-bookmark"></i>
+                            <span>تسجيل الدين</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Debts List -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-bold text-slate-800">دفتر الديون</h2>
+                        <input type="text" id="debts-search-text" oninput="renderDebts()" placeholder="بحث باسم الزبون..." class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none w-48">
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-right">
+                            <thead class="bg-slate-100 text-slate-600 text-xs font-bold uppercase">
+                                <tr>
+                                    <th class="p-3">اسم الزبون</th>
+                                    <th class="p-3">المبلغ المتبقي</th>
+                                    <th class="p-3">رقم الهاتف</th>
+                                    <th class="p-3 text-center">التسديد والإجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="debts-table-body" class="divide-y divide-slate-100">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Application Script Logic -->
+    <script>
+        const DEFAULT_USER = "admin";
+        const DEFAULT_PASS = "19861997";
+
+        let sales = JSON.parse(localStorage.getItem('store_sales')) || [];
+        let inventory = JSON.parse(localStorage.getItem('store_inventory')) || [];
+        let debts = JSON.parse(localStorage.getItem('store_debts')) || [];
+
+        window.onload = function() {
+            checkAuth();
+            setCurrentDateTime();
+            renderSales();
+            renderInventory();
+            renderDebts();
+        };
+
+        function checkAuth() {
+            const isAuth = sessionStorage.getItem('store_authenticated');
+            const hintEl = document.getElementById('login-hint');
+            hintEl.textContent = ` تم التصميم بواسطة المهندس  سجاد ماجد لسعداوي  `;
+
+            if(isAuth === 'true') {
+                document.getElementById('login-overlay').classList.add('hidden');
+            } else {
+                document.getElementById('login-overlay').classList.remove('hidden');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const uInput = document.getElementById('login-user').value.trim();
+            const pInput = document.getElementById('login-pass').value.trim();
+            const errEl = document.getElementById('login-error');
+
+            if(uInput === DEFAULT_USER && pInput === DEFAULT_PASS) {
+                sessionStorage.setItem('store_authenticated', 'true');
+                document.getElementById('login-overlay').classList.add('hidden');
+                errEl.classList.add('hidden');
+            } else {
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('store_authenticated');
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+            document.getElementById('login-overlay').classList.remove('hidden');
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-600', 'text-white', 'shadow');
+                btn.classList.add('text-slate-300');
+            });
+
+            document.getElementById(`section-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+            activeBtn.classList.add('bg-brand-600', 'text-white', 'shadow');
+            activeBtn.classList.remove('text-slate-300');
+        }
+
+        function setCurrentDateTime() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('sale-date').value = now.toISOString().slice(0, 16);
+        }
+
+        function onCategorySelectChange() {
+            const cat = document.getElementById('sale-category-select').value;
+            const itemSelect = document.getElementById('sale-item-select');
+
+            if(!cat) {
+                itemSelect.innerHTML = '<option value="">-- الرجاء اختيار القسم أولاً --</option>';
+                itemSelect.disabled = true;
+                itemSelect.classList.add('bg-slate-100');
+                return;
+            }
+
+            const filteredItems = inventory.filter(i => i.category === cat);
+            itemSelect.innerHTML = `<option value="">-- اختر سلعة من قسم (${cat}) --</option>`;
+
+            if(filteredItems.length === 0) {
+                itemSelect.innerHTML = `<option value="">لا توجد مواد مسجلة في قسم (${cat})</option>`;
+                itemSelect.disabled = true;
+            } else {
+                filteredItems.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = `${item.name} | السعر: ${item.sellPrice.toLocaleString()} د.ع (المتوفر: ${item.stock})`;
+                    if(item.stock <= 0) opt.disabled = true;
+                    itemSelect.appendChild(opt);
+                });
+                itemSelect.disabled = false;
+                itemSelect.classList.remove('bg-slate-100');
+            }
+        }
+
+        function autoFillSaleFromInventory() {
+            const id = document.getElementById('sale-item-select').value;
+            if(!id) return;
+            const item = inventory.find(i => i.id === id);
+            if(item) {
+                document.getElementById('sale-name').value = item.name;
+                document.getElementById('sale-price').value = item.sellPrice;
+                document.getElementById('sale-cost').value = item.costPrice || 0;
+            }
+        }
+
+        function handleAddSale(e) {
+            e.preventDefault();
+            const category = document.getElementById('sale-category-select').value;
+            const invId = document.getElementById('sale-item-select').value;
+            const name = document.getElementById('sale-name').value.trim();
+            const price = parseFloat(document.getElementById('sale-price').value);
+            const qty = parseInt(document.getElementById('sale-qty').value);
+            const costPrice = parseFloat(document.getElementById('sale-cost').value) || 0;
+            const dateVal = document.getElementById('sale-date').value;
+
+            if(invId) {
+                const invItem = inventory.find(i => i.id === invId);
+                if(invItem) {
+                    if(invItem.stock < qty) {
+                        alert(`الكمية المتاحة لا تكفي! المتبقي فقط (${invItem.stock}) قطعة.`);
+                        return;
+                    }
+                    invItem.stock -= qty;
+                    saveInventory();
+                    renderInventory();
+                }
+            }
+
+            const total = price * qty;
+            const profit = (price - costPrice) * qty;
+
+            const newSale = {
+                id: Date.now().toString(),
+                invId: invId || null,
+                category: category || 'عام',
+                name: name,
+                price: price,
+                costPrice: costPrice,
+                qty: qty,
+                total: total,
+                profit: profit,
+                date: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString()
+            };
+
+            sales.unshift(newSale);
+            saveSales();
+            renderSales();
+
+            document.getElementById('sale-form').reset();
+            document.getElementById('sale-item-select').disabled = true;
+            document.getElementById('sale-item-select').innerHTML = '<option value="">-- الرجاء اختيار القسم أولاً --</option>';
+            setCurrentDateTime();
+        }
+
+        // Return Item / Partial Quantity Edit
+        function handleReturnItem(id) {
+            const sale = sales.find(s => s.id === id);
+            if(!sale) return;
+
+            const action = prompt(`خيارات الإرجاع للسلعة (${sale.name}):\n\nأدخل (1) - إرجاع كلي وإلغاء البيع بالكامل\nأدخل (2) - إرجاع جزئي / تعديل الكمية المتبقية`);
+
+            if(action === '1') {
+                if(sale.invId) {
+                    const invItem = inventory.find(i => i.id === sale.invId);
+                    if(invItem) {
+                        invItem.stock += sale.qty;
+                        saveInventory();
+                        renderInventory();
+                    }
+                }
+                sales = sales.filter(s => s.id !== id);
+                saveSales();
+                renderSales();
+                alert('تم إرجاع السلعة بالكامل وإعادة الكمية إلى المخزون.');
+            } else if(action === '2') {
+                const newQtyInput = prompt(`الكمية الحالية المباعة هي (${sale.qty}). أدخل الكمية الجديدة المتبقية لدى الزبون:`);
+                if(newQtyInput !== null && !isNaN(newQtyInput)) {
+                    const newQty = parseInt(newQtyInput);
+                    if(newQty < 0 || newQty >= sale.qty) {
+                        alert('الرجاء إدخال كمية صحيحة أقل من الكمية الحالية.');
+                        return;
+                    }
+
+                    const returnedQty = sale.qty - newQty;
+                    if(sale.invId) {
+                        const invItem = inventory.find(i => i.id === sale.invId);
+                        if(invItem) {
+                            invItem.stock += returnedQty;
+                            saveInventory();
+                            renderInventory();
+                        }
+                    }
+
+                    if(newQty === 0) {
+                        sales = sales.filter(s => s.id !== id);
+                    } else {
+                        sale.qty = newQty;
+                        sale.total = sale.price * newQty;
+                        sale.profit = (sale.price - (sale.costPrice || 0)) * newQty;
+                    }
+
+                    saveSales();
+                    renderSales();
+                    alert('تم تحديث الكمية وإرجاع القطع للمخزون بنجاح!');
+                }
+            }
+        }
+
+        // Direct Clean Delete Sale Record
+        function deleteSaleRecord(id) {
+            if(!confirm('هل أنت متأكد من حذف هذه المبيعة نهائياً؟')) return;
+            
+            const sale = sales.find(s => s.id === id);
+            if(sale && sale.invId) {
+                const invItem = inventory.find(i => i.id === sale.invId);
+                if(invItem) {
+                    invItem.stock += sale.qty;
+                    saveInventory();
+                    renderInventory();
+                }
+            }
+
+            sales = sales.filter(s => s.id !== id);
+            saveSales();
+            renderSales();
+        }
+
+        function renderSales() {
+            const tbody = document.getElementById('sales-table-body');
+            tbody.innerHTML = '';
+
+            const searchText = document.getElementById('sales-search-text').value.toLowerCase();
+            const dateFrom = document.getElementById('sales-filter-date-from').value;
+            const dateTo = document.getElementById('sales-filter-date-to').value;
+
+            let filtered = sales.filter(s => {
+                const matchesText = s.name.toLowerCase().includes(searchText) || (s.category && s.category.toLowerCase().includes(searchText));
+                const sDate = s.date.slice(0, 10);
+                let matchesFrom = dateFrom ? sDate >= dateFrom : true;
+                let matchesTo = dateTo ? sDate <= dateTo : true;
+                return matchesText && matchesFrom && matchesTo;
+            });
+
+            let totalSum = 0;
+            let totalProfit = 0;
+            let totalQty = 0;
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">لا توجد مبيعات مسجلة لهذه الفترة</td></tr>`;
+            } else {
+                filtered.forEach(s => {
+                    totalSum += s.total;
+                    totalProfit += (s.profit || 0);
+                    totalQty += s.qty;
+
+                    const d = new Date(s.date);
+                    const formattedDate = d.toLocaleDateString('ar-IQ') + ' ' + d.toLocaleTimeString('ar-IQ', {hour: '2-digit', minute:'2-digit'});
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-3">
+                                <div class="font-bold text-slate-800">${s.name}</div>
+                                <span class="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">${s.category || 'عام'}</span>
+                            </td>
+                            <td class="p-3 font-semibold">${s.price.toLocaleString()} د.ع</td>
+                            <td class="p-3 font-black">${s.qty}</td>
+                            <td class="p-3 font-bold text-brand-600">${s.total.toLocaleString()} د.ع</td>
+                            <td class="p-3 font-bold text-emerald-600">+${(s.profit || 0).toLocaleString()} د.ع</td>
+                            <td class="p-3 text-xs text-slate-500">${formattedDate}</td>
+                            <td class="p-3 text-center flex items-center justify-center gap-1">
+                                <button onclick="handleReturnItem('${s.id}')" title="إرجاع السلعة أو تعديل الكمية" class="bg-amber-50 hover:bg-amber-100 text-amber-700 px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 border border-amber-200">
+                                    <i class="fa-solid fa-rotate-left"></i> إرجاع
+                                </button>
+                                <button onclick="deleteSaleRecord('${s.id}')" title="حذف السجل نهائياً" class="bg-rose-50 hover:bg-rose-100 text-rose-600 p-1.5 rounded-lg transition border border-rose-200">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            document.getElementById('stat-sales-total').textContent = `${totalSum.toLocaleString()} د.ع`;
+            document.getElementById('stat-sales-profit').textContent = `${totalProfit.toLocaleString()} د.ع`;
+            document.getElementById('stat-sales-qty').textContent = totalQty;
+            document.getElementById('stat-sales-count').textContent = filtered.length;
+        }
+
+        function filterTodaySales() {
+            const today = new Date().toISOString().slice(0, 10);
+            document.getElementById('sales-filter-date-from').value = today;
+            document.getElementById('sales-filter-date-to').value = today;
+            renderSales();
+        }
+
+        function resetSalesFilter() {
+            document.getElementById('sales-search-text').value = '';
+            document.getElementById('sales-filter-date-from').value = '';
+            document.getElementById('sales-filter-date-to').value = '';
+            renderSales();
+        }
+
+        function saveSales() {
+            localStorage.setItem('store_sales', JSON.stringify(sales));
+        }
+
+        // ================= INVENTORY MODULE =================
+        function handleAddInventory(e) {
+            e.preventDefault();
+            const category = document.getElementById('inv-category').value;
+            const name = document.getElementById('inv-name').value.trim();
+            const costPrice = parseFloat(document.getElementById('inv-cost-price').value) || 0;
+            const sellPrice = parseFloat(document.getElementById('inv-sell-price').value);
+            const stock = parseInt(document.getElementById('inv-stock').value);
+            const minStock = parseInt(document.getElementById('inv-min').value) || 3;
+
+            const newItem = {
+                id: Date.now().toString(),
+                category: category,
+                name: name,
+                costPrice: costPrice,
+                sellPrice: sellPrice,
+                stock: stock,
+                minStock: minStock
+            };
+
+            inventory.unshift(newItem);
+            saveInventory();
+            renderInventory();
+
+            document.getElementById('inventory-form').reset();
+        }
+
+        function restockItem(id) {
+            const addQty = prompt('أدخل الكمية الجديدة المضافة للمخزون:');
+            if(addQty && !isNaN(addQty) && parseInt(addQty) > 0) {
+                const item = inventory.find(i => i.id === id);
+                if(item) {
+                    item.stock += parseInt(addQty);
+                    saveInventory();
+                    renderInventory();
+                }
+            }
+        }
+
+        function deleteInventory(id) {
+            if(!confirm('هل أنت متأكد من حذف هذه المادة من المخزون؟')) return;
+            inventory = inventory.filter(i => i.id !== id);
+            saveInventory();
+            renderInventory();
+        }
+
+        function renderInventory() {
+            const tbody = document.getElementById('inventory-table-body');
+            tbody.innerHTML = '';
+
+            const searchText = document.getElementById('inv-search-text').value.toLowerCase();
+            const categoryFilter = document.getElementById('inv-filter-category').value;
+
+            let filtered = inventory.filter(i => {
+                const matchesText = i.name.toLowerCase().includes(searchText);
+                const matchesCat = categoryFilter ? i.category === categoryFilter : true;
+                return matchesText && matchesCat;
+            });
+
+            let totalCostValue = 0;
+            let lowCount = 0;
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">لا توجد بضائع متوفرة</td></tr>`;
+            } else {
+                filtered.forEach(item => {
+                    totalCostValue += (item.costPrice * item.stock);
+                    let statusBadge = '';
+                    if(item.stock <= 0) {
+                        statusBadge = `<span class="bg-rose-100 text-rose-700 text-xs px-2.5 py-1 rounded-full font-bold">نفد المخزون</span>`;
+                        lowCount++;
+                    } else if(item.stock <= item.minStock) {
+                        statusBadge = `<span class="bg-amber-100 text-amber-700 text-xs px-2.5 py-1 rounded-full font-bold">منخفض</span>`;
+                        lowCount++;
+                    } else {
+                        statusBadge = `<span class="bg-emerald-100 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-bold">متوفر</span>`;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-3">
+                                <div class="font-bold text-slate-800">${item.name}</div>
+                                <span class="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md border border-blue-100">${item.category}</span>
+                            </td>
+                            <td class="p-3 text-slate-500 font-semibold">${item.costPrice.toLocaleString()} د.ع</td>
+                            <td class="p-3 font-bold text-slate-800">${item.sellPrice.toLocaleString()} د.ع</td>
+                            <td class="p-3 font-black text-lg">${item.stock}</td>
+                            <td class="p-3">${statusBadge}</td>
+                            <td class="p-3 text-center flex items-center justify-center gap-2">
+                                <button onclick="restockItem('${item.id}')" title="تزويد رصيد" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                    <i class="fa-solid fa-plus"></i> تزويد
+                                </button>
+                                <button onclick="deleteInventory('${item.id}')" class="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            document.getElementById('stat-inv-value').textContent = `${totalCostValue.toLocaleString()} د.ع`;
+            document.getElementById('stat-inv-count').textContent = inventory.length;
+            document.getElementById('stat-inv-low').textContent = lowCount;
+        }
+
+        function saveInventory() {
+            localStorage.setItem('store_inventory', JSON.stringify(inventory));
+        }
+
+        // ================= DEBTS MODULE =================
+        function handleAddDebt(e) {
+            e.preventDefault();
+            const name = document.getElementById('debt-name').value.trim();
+            const amount = parseFloat(document.getElementById('debt-amount').value);
+            const phone = document.getElementById('debt-phone').value.trim();
+
+            const newDebt = {
+                id: Date.now().toString(),
+                name: name,
+                amount: amount,
+                phone: phone
+            };
+
+            debts.unshift(newDebt);
+            saveDebts();
+            renderDebts();
+
+            document.getElementById('debt-form').reset();
+        }
+
+        function payDebt(id) {
+            const debt = debts.find(d => d.id === id);
+            if(!debt) return;
+
+            const payVal = prompt(`تسديد دين للزبون (${debt.name})\nالمبلغ المتبقي حالياً: ${debt.amount} د.ع\nأدخل مبلغ التسديد:`);
+            if(payVal && !isNaN(payVal) && parseFloat(payVal) > 0) {
+                const paid = parseFloat(payVal);
+                if(paid >= debt.amount) {
+                    alert('تم تسديد الدين بالكامل!');
+                    debts = debts.filter(d => d.id !== id);
+                } else {
+                    debt.amount -= paid;
+                }
+                saveDebts();
+                renderDebts();
+            }
+        }
+
+        function deleteDebt(id) {
+            if(!confirm('هل أنت متأكد من حذف سجل هذا الدين؟')) return;
+            debts = debts.filter(d => d.id !== id);
+            saveDebts();
+            renderDebts();
+        }
+
+        function renderDebts() {
+            const tbody = document.getElementById('debts-table-body');
+            tbody.innerHTML = '';
+
+            const searchText = document.getElementById('debts-search-text').value.toLowerCase();
+            let filtered = debts.filter(d => d.name.toLowerCase().includes(searchText));
+
+            let totalDebtSum = 0;
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد ديون مسجلة</td></tr>`;
+            } else {
+                filtered.forEach(d => {
+                    totalDebtSum += d.amount;
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-3 font-bold text-slate-800">${d.name}</td>
+                            <td class="p-3 font-black text-rose-600">${d.amount.toLocaleString()} د.ع</td>
+                            <td class="p-3 text-slate-600 dir-ltr text-right">${d.phone || '-'}</td>
+                            <td class="p-3 text-center flex items-center justify-center gap-2">
+                                <button onclick="payDebt('${d.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                    <i class="fa-solid fa-hand-holding-hand"></i> تسديد
+                                </button>
+                                <button onclick="deleteDebt('${d.id}')" class="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            document.getElementById('stat-debts-total').textContent = `${totalDebtSum.toLocaleString()} د.ع`;
+            document.getElementById('stat-debts-count').textContent = debts.length;
+        }
+
+        function saveDebts() {
+            localStorage.setItem('store_debts', JSON.stringify(debts));
+        }
+
+        function exportSalesCSV() {
+            if(sales.length === 0) return alert('لا توجد مبيعات لتصديرها');
+            let csvStr = "\uFEFFالقسم,الاسم,سعر البيع,التكلفة,الكمية,المجموع,الربح,التاريخ\n";
+            sales.forEach(s => {
+                csvStr += `"${s.category || ''}","${s.name}",${s.price},${s.costPrice || 0},${s.qty},${s.total},${s.profit || 0},"${new Date(s.date).toLocaleString('ar-IQ')}"\n`;
+            });
+            const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sales_report_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+        }
+    </script>
+</body>
+</html>
