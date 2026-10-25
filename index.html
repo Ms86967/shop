@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مركز الألعاب والحاسبات - نظام الإدارة الشامل</title>
+    <title>مركز سمير - نظام الإدارة والمبيعات</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -30,6 +30,28 @@
             }
         }
     </script>
+    <style>
+        /* إعدادات طباعة الفاتورة للزبون */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-receipt, #printable-receipt * {
+                visibility: visible;
+            }
+            #printable-receipt {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 10px;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
 
@@ -73,8 +95,8 @@
                         <i class="fa-solid fa-shop text-xl"></i>
                     </div>
                     <div>
-                        <h1 class="font-black text-lg leading-tight">مركز إدارة المحل</h1>
-                        <span class="text-xs text-slate-400">المبيعات • الأرباح • الإرجاع • المخزون</span>
+                        <h1 class="font-black text-lg leading-tight">مركز سمير لتموين الألعاب والحاسبات</h1>
+                        <span class="text-xs text-slate-400">المبيعات • الباركود • الطباعة • المخزون</span>
                     </div>
                 </div>
 
@@ -106,7 +128,7 @@
 
         <!-- ==================== SECTION 1: SALES & PROFITS ==================== -->
         <section id="section-sales" class="space-y-6">
-            <!-- Dynamic Stats Cards (Connected to Date Filters) -->
+            <!-- Dynamic Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
                     <div>
@@ -156,6 +178,15 @@
                         <i class="fa-solid fa-cart-plus text-brand-500"></i>
                         <span>تسجيل عملية بيع جديدة</span>
                     </h2>
+
+                    <!-- Barcode Reader Input -->
+                    <div class="bg-brand-50 p-3 rounded-xl border border-brand-200 space-y-1">
+                        <label class="block text-xs font-bold text-brand-700 flex items-center gap-1">
+                            <i class="fa-solid fa-barcode"></i> مسح الباركود بمسدس الباركود
+                        </label>
+                        <input type="text" id="sale-barcode-scan" onkeydown="handleBarcodeScan(event)" placeholder="امسح الباركود هنا..." class="w-full bg-white border border-brand-300 text-brand-900 rounded-lg px-3 py-2 text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <p class="text-[10px] text-brand-600">وجه مسدس الباركود وسيتم جلب السلعة وتعبئة البيانات تلقائياً</p>
+                    </div>
 
                     <form id="sale-form" onsubmit="handleAddSale(event)" class="space-y-4">
                         <div>
@@ -248,7 +279,7 @@
                                     <th class="p-3">المجموع</th>
                                     <th class="p-3">الربح</th>
                                     <th class="p-3">التاريخ والوقت</th>
-                                    <th class="p-3 text-center">إرجاع / حذف</th>
+                                    <th class="p-3 text-center">وصل / إرجاع / حذف</th>
                                 </tr>
                             </thead>
                             <tbody id="sales-table-body" class="divide-y divide-slate-100">
@@ -301,6 +332,11 @@
                         <span>إضافة سلعة جديدة للمخزون</span>
                     </h2>
                     <form id="inventory-form" onsubmit="handleAddInventory(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">رمز الباركود (مسح بالمسدس أو إدخال يدوي)</label>
+                            <input type="text" id="inv-barcode" placeholder="امسح الباركود هنا..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1">القسم *</label>
                             <select id="inv-category" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-semibold">
@@ -357,7 +393,7 @@
                                 <option value="ألعاب بلي">ألعاب بلي</option>
                                 <option value="أخرى">أخرى</option>
                             </select>
-                            <input type="text" id="inv-search-text" oninput="renderInventory()" placeholder="بحث..." class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none w-36">
+                            <input type="text" id="inv-search-text" oninput="renderInventory()" placeholder="بحث بالاسم أو الباركود..." class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none w-44">
                         </div>
                     </div>
 
@@ -366,6 +402,7 @@
                             <thead class="bg-slate-100 text-slate-600 text-xs font-bold uppercase">
                                 <tr>
                                     <th class="p-3">السلعة والقسم</th>
+                                    <th class="p-3">الباركود</th>
                                     <th class="p-3">الشراء</th>
                                     <th class="p-3">البيع</th>
                                     <th class="p-3">المتبقي</th>
@@ -460,6 +497,45 @@
 
     </main>
 
+    <!-- Hidden Receipt Print Area -->
+    <div id="printable-receipt" class="hidden">
+        <div style="font-family: 'Tajawal', sans-serif; text-align: right; width: 300px; margin: auto; padding: 15px; border: 1px solid #ddd;">
+            <div style="text-align: center; margin-bottom: 10px;">
+                <h2 style="font-size: 18px; font-weight: bold; margin: 0;">مركز سمير</h2>
+                <p style="font-size: 12px; color: #555; margin: 2px 0;">للألعاب والحاسبات والملحقات</p>
+                <p style="font-size: 10px; color: #777;">---------------------------------------</p>
+            </div>
+            <p style="font-size: 12px; margin: 3px 0;"><strong>رقم الوصل:</strong> <span id="receipt-id"></span></p>
+            <p style="font-size: 12px; margin: 3px 0;"><strong>التاريخ والوقت:</strong> <span id="receipt-date"></span></p>
+            <p style="font-size: 10px; color: #777; margin: 5px 0;">---------------------------------------</p>
+            <table style="width: 100%; font-size: 12px; text-align: right; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 1px dashed #ccc;">
+                        <th style="padding: 4px 0;">المادة</th>
+                        <th style="padding: 4px 0; text-align: center;">العدد</th>
+                        <th style="padding: 4px 0; text-align: left;">المجموع</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="receipt-item-name" style="padding: 6px 0;"></td>
+                        <td id="receipt-item-qty" style="padding: 6px 0; text-align: center;"></td>
+                        <td id="receipt-item-total" style="padding: 6px 0; text-align: left; font-weight: bold;"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size: 10px; color: #777; margin: 5px 0;">---------------------------------------</p>
+            <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin-top: 5px;">
+                <span>المبلغ الإجمالي:</span>
+                <span id="receipt-grand-total"></span>
+            </div>
+            <div style="text-align: center; margin-top: 15px; font-size: 11px; color: #555;">
+                <p>شكراً لزيارتكم مركز سمير!</p>
+                <p style="font-size: 9px; color: #888;">أهلاً وسهلاً بكم دائماً</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Application Script Logic -->
     <script>
         const DEFAULT_USER = "admin";
@@ -480,7 +556,7 @@
         function checkAuth() {
             const isAuth = sessionStorage.getItem('store_authenticated');
             const hintEl = document.getElementById('login-hint');
-            hintEl.textContent = ` تم التصميم بواسطة المهندس  سجاد ماجد لسعداوي  `;
+            hintEl.textContent = ` تم التصميم بواسطة المهندس سجاد ماجد لسعداوي `;
 
             if(isAuth === 'true') {
                 document.getElementById('login-overlay').classList.add('hidden');
@@ -528,6 +604,27 @@
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('sale-date').value = now.toISOString().slice(0, 16);
+        }
+
+        // ================= BARCODE SCANNER HANDLER =================
+        function handleBarcodeScan(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const code = e.target.value.trim();
+                if(!code) return;
+
+                const matchedItem = inventory.find(i => i.barcode && i.barcode.trim() === code);
+                if(matchedItem) {
+                    document.getElementById('sale-category-select').value = matchedItem.category;
+                    onCategorySelectChange();
+                    document.getElementById('sale-item-select').value = matchedItem.id;
+                    autoFillSaleFromInventory();
+                    e.target.value = '';
+                } else {
+                    alert(`السلعة صاحب الباركود (${code}) غير مسجلة في المخزون!`);
+                    e.target.value = '';
+                }
+            }
         }
 
         function onCategorySelectChange() {
@@ -620,6 +717,25 @@
             setCurrentDateTime();
         }
 
+        // Print Sale Receipt Function
+        function printReceipt(id) {
+            const sale = sales.find(s => s.id === id);
+            if (!sale) return;
+
+            document.getElementById('receipt-id').textContent = '#' + sale.id.slice(-6);
+            const d = new Date(sale.date);
+            document.getElementById('receipt-date').textContent = d.toLocaleDateString('ar-IQ') + ' ' + d.toLocaleTimeString('ar-IQ', {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('receipt-item-name').textContent = sale.name;
+            document.getElementById('receipt-item-qty').textContent = sale.qty;
+            document.getElementById('receipt-item-total').textContent = sale.total.toLocaleString() + ' د.ع';
+            document.getElementById('receipt-grand-total').textContent = sale.total.toLocaleString() + ' د.ع';
+
+            const receiptContainer = document.getElementById('printable-receipt');
+            receiptContainer.classList.remove('hidden');
+            window.print();
+            receiptContainer.classList.add('hidden');
+        }
+
         // Return Item / Partial Quantity Edit
         function handleReturnItem(id) {
             const sale = sales.find(s => s.id === id);
@@ -674,7 +790,6 @@
             }
         }
 
-        // Direct Clean Delete Sale Record
         function deleteSaleRecord(id) {
             if(!confirm('هل أنت متأكد من حذف هذه المبيعة نهائياً؟')) return;
             
@@ -736,6 +851,9 @@
                             <td class="p-3 font-bold text-emerald-600">+${(s.profit || 0).toLocaleString()} د.ع</td>
                             <td class="p-3 text-xs text-slate-500">${formattedDate}</td>
                             <td class="p-3 text-center flex items-center justify-center gap-1">
+                                <button onclick="printReceipt('${s.id}')" title="طباعة وصل بيع" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 border border-blue-200">
+                                    <i class="fa-solid fa-print"></i> وصل
+                                </button>
                                 <button onclick="handleReturnItem('${s.id}')" title="إرجاع السلعة أو تعديل الكمية" class="bg-amber-50 hover:bg-amber-100 text-amber-700 px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 border border-amber-200">
                                     <i class="fa-solid fa-rotate-left"></i> إرجاع
                                 </button>
@@ -775,6 +893,7 @@
         // ================= INVENTORY MODULE =================
         function handleAddInventory(e) {
             e.preventDefault();
+            const barcode = document.getElementById('inv-barcode').value.trim();
             const category = document.getElementById('inv-category').value;
             const name = document.getElementById('inv-name').value.trim();
             const costPrice = parseFloat(document.getElementById('inv-cost-price').value) || 0;
@@ -784,6 +903,7 @@
 
             const newItem = {
                 id: Date.now().toString(),
+                barcode: barcode || null,
                 category: category,
                 name: name,
                 costPrice: costPrice,
@@ -826,7 +946,7 @@
             const categoryFilter = document.getElementById('inv-filter-category').value;
 
             let filtered = inventory.filter(i => {
-                const matchesText = i.name.toLowerCase().includes(searchText);
+                const matchesText = i.name.toLowerCase().includes(searchText) || (i.barcode && i.barcode.toLowerCase().includes(searchText));
                 const matchesCat = categoryFilter ? i.category === categoryFilter : true;
                 return matchesText && matchesCat;
             });
@@ -835,7 +955,7 @@
             let lowCount = 0;
 
             if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">لا توجد بضائع متوفرة</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">لا توجد بضائع متوفرة</td></tr>`;
             } else {
                 filtered.forEach(item => {
                     totalCostValue += (item.costPrice * item.stock);
@@ -856,6 +976,7 @@
                                 <div class="font-bold text-slate-800">${item.name}</div>
                                 <span class="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md border border-blue-100">${item.category}</span>
                             </td>
+                            <td class="p-3 font-mono text-xs font-bold text-slate-600">${item.barcode || '-'}</td>
                             <td class="p-3 text-slate-500 font-semibold">${item.costPrice.toLocaleString()} د.ع</td>
                             <td class="p-3 font-bold text-slate-800">${item.sellPrice.toLocaleString()} د.ع</td>
                             <td class="p-3 font-black text-lg">${item.stock}</td>
